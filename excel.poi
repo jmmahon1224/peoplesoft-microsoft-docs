@@ -1,0 +1,561 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package excel;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import org.apache.poi.hssf.usermodel.*;
+import org.apache.poi.xssf.usermodel.*;
+import org.apache.poi.hssf.util.HSSFColor;
+
+
+/**
+ *
+ * @author MAHONJ
+ */
+public class poi {
+    
+    public static void main(String[] args){
+	System.out.println("Hi");
+    }
+
+    //HSSF
+    public HSSFWorkbook initiateHSSWorkbook(String Filename){
+        try {
+            // create a new file
+            FileOutputStream out = new FileOutputStream(Filename);
+            // create a new workbook
+            HSSFWorkbook wb = new HSSFWorkbook();
+            return wb;
+	}
+	catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }
+    }
+    
+    public HSSFSheet intitiateHSSFSheet(HSSFWorkbook workBook, java.lang.Integer index) {
+        try {
+            boolean stop = false;
+            boolean nonBlankRowFound;
+            short c;
+            HSSFRow lastRow = null;
+            HSSFCell cell = null;
+            
+            HSSFSheet hssfSheet = workBook.getSheetAt(index);
+            
+            while (stop == false) {
+                nonBlankRowFound = false;
+                lastRow = hssfSheet.getRow(hssfSheet.getLastRowNum());
+                for (c = lastRow.getFirstCellNum(); c <= lastRow.getLastCellNum(); c++) {
+                    cell = lastRow.getCell(c);
+                    if (cell != null && lastRow.getCell(c).getCellType() != HSSFCell.CELL_TYPE_BLANK) {
+                        nonBlankRowFound = true;
+                    }
+                }
+                if (nonBlankRowFound == true) {
+                    stop = true;
+                } else {
+                    hssfSheet.removeRow(lastRow);
+                }
+            }            
+            return hssfSheet;
+        }
+        catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }
+    
+    }
+    
+    public HSSFSheet createHSSFSheet(HSSFWorkbook workBook, java.lang.String sheetName) {
+        try {
+            HSSFSheet hssfSheet = workBook.createSheet(sheetName);
+            return hssfSheet;
+        }
+        catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }
+    
+    }
+    
+    public HSSFRow intitiateHSSFRow(HSSFSheet sheet, java.lang.Integer index) {
+        try {
+            HSSFRow hssfrow = sheet.getRow(index);
+            if (hssfrow == null){
+                hssfrow = sheet.createRow(index);    
+                }
+            
+            return hssfrow;
+        }
+        catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }
+    
+    }
+    
+    public HSSFCell intitiateHSSFCell(HSSFRow row, java.lang.Integer index) {
+        try {
+            HSSFCell hssfcell = row.getCell(index, row.CREATE_NULL_AS_BLANK );
+            return hssfcell;
+        }
+        catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }
+    
+    }
+    
+    public HSSFCell setCellValueString(HSSFSheet sheet, int intRow, int intColumn, java.lang.String value) {
+        try {
+            HSSFRow hssfrow = sheet.getRow(intColumn);
+            if (hssfrow == null){
+                hssfrow = sheet.createRow(intColumn);    
+                }
+                
+            HSSFCell hssfcell = hssfrow.getCell(intRow);
+            if (hssfcell == null) {
+                hssfcell = hssfrow.createCell(intRow);    
+                }
+            hssfcell.setCellType(HSSFCell.CELL_TYPE_STRING);
+            hssfcell.setCellValue(value);
+            return hssfcell;
+        }
+        catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }    
+    }
+    
+//    public HSSFCell setCellValueNumeric(HSSFSheet sheet, int intRow, int intColumn, java.lang.Integer value) {
+//        try {
+//            HSSFRow hssfrow = sheet.getRow(intColumn);
+//            if (hssfrow == null){
+//                hssfrow = sheet.createRow(intColumn);    
+//                }
+//                
+//            HSSFCell hssfcell = hssfrow.getCell(intRow);
+//            if (hssfcell == null) {
+//                hssfcell = hssfrow.createCell(intRow);    
+//                }
+//            hssfcell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
+//            hssfcell.setCellValue(value);
+//            return hssfcell;
+//        }
+//        catch (Exception i) {
+//            System.out.println(i);
+//            return null;
+//        }    
+//    }
+    
+    public void setCellValueNumeric(HSSFCell cell, double value) {
+        try {
+            cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
+            cell.setCellValue(value);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+        }    
+    }
+    
+    public void setCellValueNumeric(XSSFCell cell, double value) {
+        try {
+            cell.setCellType(XSSFCell.CELL_TYPE_NUMERIC);
+            cell.setCellValue(value);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+        }    
+    }
+    
+//    public HSSFCell setCellValueFormula(HSSFSheet sheet, int intRow, int intColumn, java.lang.String value) {
+//        try {
+//            HSSFRow hssfrow = sheet.getRow(intColumn);
+//            if (hssfrow == null){
+//                hssfrow = sheet.createRow(intColumn);    
+//                }
+//                
+//            HSSFCell hssfcell = hssfrow.getCell(intRow);
+//            if (hssfcell == null) {
+//                hssfcell = hssfrow.createCell(intRow);    
+//                }
+//            hssfcell.setCellType(HSSFCell.CELL_TYPE_FORMULA);
+//            hssfcell.setCellValue(value);
+//            return hssfcell;
+//        }
+//        catch (Exception i) {
+//            System.out.println(i);
+//            return null;
+//        }    
+//    }
+    
+    public void setCellValueFormula(HSSFCell cell, java.lang.String formula) {
+        try {
+            cell.setCellType(HSSFCell.CELL_TYPE_FORMULA);
+            cell.setCellFormula(formula);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+        }    
+    }
+    
+    public void setCellValueFormula(XSSFCell cell, java.lang.String formula) {
+        try {
+            cell.setCellType(XSSFCell.CELL_TYPE_FORMULA);
+            cell.setCellFormula(formula);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+        }    
+    }
+    
+    
+    public HSSFCellStyle getCellStyle(HSSFWorkbook workBook) {
+        try {
+            HSSFFont font = workBook.createFont();
+            font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
+            HSSFCellStyle cellStyle = workBook.createCellStyle();
+            cellStyle.setFont(font);
+            return cellStyle; 
+        }
+        catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }
+    }   
+    
+    public HSSFFont createFont(HSSFWorkbook workBook) {
+        try {
+            HSSFFont font = workBook.createFont();
+            //font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
+            //HSSFCellStyle cellStyle = workBook.createCellStyle();
+            //cellStyle.setFont(font);
+            return font; 
+        }
+        catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }
+    }  
+    
+    public XSSFFont createFont(XSSFWorkbook workBook) {
+        try {
+            XSSFFont font = workBook.createFont();
+            //font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
+            //HSSFCellStyle cellStyle = workBook.createCellStyle();
+            //cellStyle.setFont(font);
+            return font; 
+        }
+        catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }
+    }
+    
+    public void setBold(HSSFFont font) {
+        try {
+            font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+        }
+    }
+    
+    public void setBold(XSSFFont font) {
+        try {
+            font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+        }
+    }    
+    
+    public void resetBold(HSSFFont font) {
+        try {
+            font.setBoldweight(HSSFFont.BOLDWEIGHT_NORMAL);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+        }
+    }
+    
+    public void resetBold(XSSFFont font) {
+        try {
+            font.setBoldweight(HSSFFont.BOLDWEIGHT_NORMAL);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+        }
+    }        
+    
+    public void setItalic(HSSFFont font, boolean italic) {
+        try {
+            font.setItalic(italic);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+        }
+    } 
+    
+    public void setItalic(XSSFFont font, boolean italic) {
+        try {
+            font.setItalic(italic);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+        }
+    }     
+    
+    public void setUnderline(HSSFFont font, byte underline) {
+        try {
+            font.setUnderline(underline);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+        }
+    }     
+    
+    public void setUnderline(XSSFFont font, byte underline) {
+        try {
+            font.setUnderline(underline);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+        }
+    }     
+    
+    public void setEscapement(HSSFFont font, short escapement) {
+        try {
+            font.setTypeOffset(escapement);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+        }
+    }     
+    
+    public void setEscapement(XSSFFont font, byte escapement) {
+        try {
+            font.setTypeOffset(escapement);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+        }
+    }       
+    public void setColumnWidth(HSSFSheet sheet, int column, int width ){
+    try {
+        sheet.setColumnWidth(column,width); 
+        }
+    catch (Exception i) {
+            System.out.println(i);
+        }
+    }
+        
+    public void autoColumnWidth(HSSFSheet sheet, int column){
+    try {
+        sheet.autoSizeColumn(column); 
+        }
+    catch (Exception i) {
+            System.out.println(i);
+        }
+    }
+    
+    public void setCellStyle(HSSFCell cell, HSSFCellStyle cellStyle) {
+    try {
+        cell.setCellStyle(cellStyle);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+         }
+    }
+    
+    public void setCellStyle(XSSFCell cell, XSSFCellStyle cellstyle) {
+        try {
+            cell.setCellStyle(cellstyle);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+        }
+    }   
+    
+    public void setFont(HSSFCellStyle cellStyle, HSSFFont font) {
+    try {
+        cellStyle.setFont(font);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+         }
+    }
+    
+    public void setFont(XSSFCellStyle cellStyle, XSSFFont font) {
+    try {
+        cellStyle.setFont(font);
+        }
+        catch (Exception i) {
+            System.out.println(i);
+         }
+    }    
+    
+    public void setDataFormat(HSSFCellStyle cellStyle, HSSFDataFormat dataFormat, java.lang.String format) {
+    try {
+        cellStyle.setDataFormat(dataFormat.getFormat(format));
+        }
+        catch (Exception i) {
+            System.out.println(i);
+         }
+    }    
+    
+    public void setDataFormat(XSSFCellStyle cellStyle, XSSFDataFormat dataFormat, java.lang.String format) {
+    try {
+        cellStyle.setDataFormat(dataFormat.getFormat(format));
+        }
+        catch (Exception i) {
+            System.out.println(i);
+         }
+    }        
+            
+    
+    //XSSF
+    public XSSFWorkbook initiateXSSFWorkbook(String Filename){
+        try {
+            // create a new file
+            FileOutputStream out = new FileOutputStream(Filename);
+            // create a new workbook
+            XSSFWorkbook wb = new XSSFWorkbook();
+            return wb;
+	}
+	catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }
+    }
+    
+    public XSSFSheet createXSSFSheet(XSSFWorkbook workBook, java.lang.String sheetName) {
+        try {
+            XSSFSheet xssfSheet = workBook.createSheet(sheetName);
+            return xssfSheet;
+        }
+        catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }
+    
+    }
+    
+    public XSSFSheet intitiateXSSFSheet(XSSFWorkbook workBook, java.lang.Integer index) {
+        try {
+            boolean stop = false;
+            boolean nonBlankRowFound;
+            short c;
+            XSSFRow lastRow = null;
+            XSSFCell cell = null;
+            
+            XSSFSheet xssfSheet = workBook.getSheetAt(index);
+            
+            while (stop == false) {
+                nonBlankRowFound = false;
+                lastRow = xssfSheet.getRow(xssfSheet.getLastRowNum());
+                for (c = lastRow.getFirstCellNum(); c <= lastRow.getLastCellNum(); c++) {
+                    cell = lastRow.getCell(c);
+                    if (cell != null && lastRow.getCell(c).getCellType() != XSSFCell.CELL_TYPE_BLANK) {
+                        nonBlankRowFound = true;
+                    }
+                }
+                if (nonBlankRowFound == true) {
+                    stop = true;
+                } else {
+                    xssfSheet.removeRow(lastRow);
+                }
+            }            
+            return xssfSheet;
+        }
+        catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }
+    
+    }
+    
+    public XSSFRow intitiateXSSFRow(XSSFSheet sheet, java.lang.Integer index) {
+        try {
+            XSSFRow xssfrow = sheet.getRow(index);
+            if (xssfrow == null){
+                xssfrow = sheet.createRow(index);    
+                }
+            return xssfrow;
+        }
+        catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }
+    
+    }
+    
+    public XSSFCell intitiateXSSFCell(XSSFRow row, java.lang.Integer index) {
+        try {
+            XSSFCell xssfcell = row.getCell(index);
+            return xssfcell;
+        }
+        catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }
+    
+    }
+    
+    public XSSFCellStyle createCellStyle(XSSFWorkbook workBook) {
+        try {
+            XSSFCellStyle xssfcellstyle = workBook.createCellStyle();
+            return xssfcellstyle;
+        }
+        catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }
+    }
+    
+    public HSSFCellStyle createCellStyle(HSSFWorkbook workBook) {
+        try {
+            HSSFCellStyle hssfcellstyle = workBook.createCellStyle();
+            return hssfcellstyle;
+        }
+        catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }
+    }    
+    
+    public HSSFDataFormat createDataFormat(HSSFWorkbook workBook) {
+        try {
+            HSSFDataFormat hssfdataformat = workBook.createDataFormat();
+            return hssfdataformat;
+        }
+        catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }
+    }    
+    
+    public XSSFDataFormat createDataFormat(XSSFWorkbook workBook) {
+        try {
+            XSSFDataFormat xssfdataformat = workBook.createDataFormat();
+            return xssfdataformat;
+        }
+        catch (Exception i) {
+            System.out.println(i);
+            return null;
+        }
+    }   
+    
+
+            
+    
+}
+
+	
+
