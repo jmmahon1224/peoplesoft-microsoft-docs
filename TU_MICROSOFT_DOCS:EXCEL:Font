@@ -1,0 +1,96 @@
+import TU_MICROSOFT_DOCS:EXCEL:*;
+
+class Font
+   property JavaObject POIClassWrapper get;
+   property JavaObject FontObject;
+   property TU_MICROSOFT_DOCS:EXCEL:WorkBook WorkBook;
+   
+   property boolean Bold get set;
+   property boolean Bold_;
+   property boolean Italic get set;
+   property boolean Italic_;
+   property integer Underline get set;
+   property integer Underline_;
+   property integer Offset get set;
+   property integer Offset_;
+   property string CharSet;
+   property string Color;
+   property number FontHeight;
+   property string FontName;
+   
+   method Font(&workbook_ As TU_MICROSOFT_DOCS:EXCEL:WorkBook);
+end-class;
+
+get Bold
+   /+ Returns Boolean +/
+   Return %This.Bold_;
+end-get;
+
+set Bold
+   /+ &NewValue as Boolean +/
+   %This.Bold_ = &NewValue;
+   If &NewValue = True Then
+      %This.POIClassWrapper.setBold(%This.FontObject);
+   Else
+      %This.POIClassWrapper.resetBold(%This.FontObject);
+   End-If;
+end-set;
+
+get Italic
+   /+ Returns Boolean +/
+   Return %This.Italic_;
+end-get;
+
+set Italic
+   /+ &NewValue as Boolean +/
+   %This.Italic_ = &NewValue;
+   %This.POIClassWrapper.setItalic(%This.FontObject, &NewValue);
+end-set;
+
+get Underline
+   /+ Returns Integer +/
+   Return %This.Underline_;
+end-get;
+
+/****************************/
+/* U_DOUBLE 			  2 */
+/* U_DOUBLE_ACCOUNTING 	 34 */
+/* U_NONE 				  0 */
+/* U_SINGLE 			  1 */
+/* U_SINGLE_ACCOUNTING 	 33 */
+/****************************/
+set Underline
+   /+ &NewValue as Integer +/
+   %This.Underline_ = &NewValue;
+   %This.POIClassWrapper.setUnderline(%This.FontObject, &NewValue);
+end-set;
+
+get Offset
+   /+ Returns Integer +/
+   Return %This.Offset_
+end-get;
+
+/*******************/
+/* SS_NONE 		0  */
+/* SS_SUB 		2  */
+/* SS_SUPER 	1  */
+/*******************/
+set Offset
+   /+ &NewValue as Integer +/
+   %This.Offset_ = &NewValue;
+   %This.POIClassWrapper.setEscapement(%This.FontObject, &NewValue);
+end-set;
+
+get POIClassWrapper
+   /+ Returns JavaObject +/
+   Return CreateJavaObject("excel.poi");
+end-get;
+
+method Font
+   /+ &workbook_ as TU_MICROSOFT_DOCS:EXCEL:WorkBook +/
+   Local JavaObject &OBJ_excel_font;
+   %This.WorkBook = &workbook_;
+   &OBJ_excel_font = %This.POIClassWrapper.createFont(%This.WorkBook.workbook);
+   %This.FontObject = &OBJ_excel_font;
+end-method;
+
