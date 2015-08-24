@@ -1,0 +1,204 @@
+import TU_MICROSOFT_DOCS:EXCEL:*;
+
+Local string &REPORT_FileName, &REPORT_FilePath;
+Local number &logging_level;
+
+/* *****************************/
+/* Report Output Directory     */
+/* XLS Files need to be opened */
+/* here to esnure they show up */
+/* in View/Log Trace.          */
+/* *****************************/
+SQLExec("SELECT PRCSOUTPUTDIR FROM PSPRCSPARMS WHERE PRCSINSTANCE = :1", TU_HR_AET.PROCESS_INSTANCE.Value, &Dist_Directory);
+If Substring(&Dist_Directory, Len(&Dist_Directory), 1) <> "\" Then
+   &Dist_Directory = &Dist_Directory | "\";
+End-If;
+
+/* *****************************/
+/* XLS Files                   */
+/* *****************************/
+/* Report File */
+&REPORT_FileName = "TUHS Excel Test.xls";
+&REPORT_FilePath = &Dist_Directory | &REPORT_FileName;
+
+/* Create the Workbook */
+Local TU_MICROSOFT_DOCS:EXCEL:WorkBook &report = create TU_MICROSOFT_DOCS:EXCEL:WorkBook();
+&report.filepath = &REPORT_FilePath;
+&report.XSSF = False;
+&report.CreateWorkBook();
+
+/* Create the sheet */
+&sheet = &report.CreateSheet("Test");
+
+/* Set values, Long Form */
+&row = &sheet.GetRowByIndex(0);
+&cell = &row.GetCellByIndex(0);
+&cell.SetCellValueString("test 1 Long Form");
+
+/* Short Form, does not return an instance of a Cell */
+&sheet.GetRowByIndex(0).GetCellByIndex(1).SetCellValueString("Short Form");
+
+/* Workbook method to set value, returns and instance of cell so you can set formatting */
+&cell = &report.SetCellValueString(&sheet, 1, 0, "Worksheet method clone old version");
+
+/* Long Form */
+&row = &sheet.GetRowByIndex(4);
+&cell = &row.GetCellByIndex(0);
+&cell.SetCellValueNumber(1.12345678901);
+
+&row = &sheet.GetRowByIndex(5);
+&cell = &row.GetCellByIndex(0);
+&cell.SetCellValueNumber(1001001.12345678901);
+
+
+/* Data Formats can be set either using a Built in list, included in the DataFormat class for reference or defined */
+/* Data Format */
+&twodecimals = &report.GetBuiltInDataFormat(4);
+&percent = &report.CreateDataFormat("#0.00%");
+&thousandssep = &report.CreateDataFormat("#,##0.00");
+
+/* Font */
+&boldFont = &report.CreateFont();
+&boldFont.Bold = True;
+&boldFont.Italic = True;
+&boldFont.Underline = 33;
+
+/* Cell Style */
+&header = &report.CreateCellStyle();
+&header.SetFont(&boldFont);
+&header.SetDataFormat(&twodecimals);
+
+/* Assign setup to cell */
+&cell.SetCellStyle(&header);
+
+/* Data Format Test */
+&cellStylePercentage = &report.CreateCellStyle();
+&cellStylePercentage.SetFont(&boldFont);
+&cellStylePercentage.SetDataFormat(&thousandssep);
+&cell = &sheet.GetRowByIndex(7).GetCellByIndex(0).SetCellValueNumber(1001001.12345678901);
+
+&row = &sheet.GetRowByIndex(7);
+&cell = &row.GetCellByIndex(0);
+&cell.SetCellValueNumber(1001001.12345678901);
+&cell.SetCellStyle(&cellStylePercentage);
+
+&sheet.GetRowByIndex(8).GetCellByIndex(0).SetCellValueNumber(1001001.12345678901);
+&cell.SetCellStyle(&cellStylePercentage);
+
+&cell = &sheet.GetRowByIndex(11).GetCellByIndex(0);
+&cell.SetCellValueNumber(1001001.12);
+&cell.SetCellStyle(&cellStylePercentage);
+
+&cell = &sheet.GetRowByIndex(13).GetCellByIndex(0).SetCellValueNumber(1);
+&cell = &sheet.GetRowByIndex(13).GetCellByIndex(1).SetCellValueNumber(3);
+&cell = &sheet.GetRowByIndex(13).GetCellByIndex(2);
+&cell.SetCellValueFormula("A" | &cell.RowIndex | "/B" | &cell.RowIndex);
+&cell.SetCellStyle(&cellStylePercentage);
+
+/* Report Test */
+&dataformat_raisepercent = &report.CreateDataFormat("#0.00%");
+&cellstyle_columnB = &report.CreateCellStyle();
+&cellstyle_columnB.SetFont(&boldFont);
+&cellstyle_columnB.SetDataFormat(&dataformat_raisepercent);
+
+&dataformat_currency = &report.CreateDataFormat("$#,##0.00");
+&cellstyle_columnC = &report.CreateCellStyle();
+&cellstyle_columnC.SetFont(&boldFont);
+&cellstyle_columnC.SetDataFormat(&dataformat_currency);
+
+&sheet.GetRowByIndex(17).GetCellByIndex(0).SetCellValueNumber(100000);
+&cell = &sheet.GetRowByIndex(17).GetCellByIndex(1);
+&cell.SetCellValueNumber(0);
+&cell.SetCellStyle(&cellstyle_columnB);
+
+&cell = &sheet.GetRowByIndex(17).GetCellByIndex(2);
+&cell.SetCellValueFormula("(1+B" | &cell.RowIndex | ")*A" | &cell.RowIndex);
+&cell.SetCellStyle(&cellstyle_columnC);
+
+/* old Version - should return cell object Single line set and return */
+&cell = &report.SetCellValueString(&sheet, 19, 0, "Single line set with return test");
+&cell = &report.SetCellValueNumber(&sheet, 20, 0, 100000);
+&cell = &report.SetCellValueNumber(&sheet, 20, 1, 0);
+&cell.SetCellStyle(&cellstyle_columnB);
+&cell = &report.SetCellValueFormula(&sheet, 20, 2, "(1+B" | &cell.RowIndex | ")*A" | &cell.RowIndex);
+&cell.SetCellStyle(&cellstyle_columnC);
+
+/* Font */
+&superscriptFont = &report.CreateFont();
+&superscriptFont.Bold = True;
+&superscriptFont.Italic = True;
+&superscriptFont.Underline = 33;
+&superscriptFont.Offset = 2;
+&cell = &report.SetCellValueString(&sheet, 22, 0, "Superscript test");
+&cellstyle_superscript = &report.CreateCellStyle();
+&cellstyle_superscript.SetFont(&superscriptFont);
+&cell.SetCellStyle(&cellstyle_superscript);
+
+/* Cell Style Alignment Tests */
+&cell = &report.SetCellValueString(&sheet, 24, 0, "ALIGN_GENERAL");
+&cellstyle_property_test0 = &report.CreateCellStyle();
+&cellstyle_property_test0.Alignment = 0;
+&cell.setCellStyle(&cellstyle_property_test0);
+
+&cell = &report.SetCellValueString(&sheet, 25, 0, "ALIGN_LEFT");
+&cellstyle_property_test1 = &report.CreateCellStyle();
+&cellstyle_property_test1.Alignment = 1;
+&cell.setCellStyle(&cellstyle_property_test1);
+
+&cell = &report.SetCellValueString(&sheet, 26, 0, "ALIGN_CENTER");
+&cellstyle_property_test2 = &report.CreateCellStyle();
+&cellstyle_property_test2.Alignment = 2;
+&cell.setCellStyle(&cellstyle_property_test2);
+
+&cell = &report.SetCellValueString(&sheet, 27, 0, "ALIGN_RIGHT");
+&cellstyle_property_test3 = &report.CreateCellStyle();
+&cellstyle_property_test3.Alignment = 3;
+&cell.setCellStyle(&cellstyle_property_test3);
+
+&cell = &report.SetCellValueString(&sheet, 28, 0, "ALIGN_FILL");
+&cellstyle_property_test4 = &report.CreateCellStyle();
+&cellstyle_property_test4.Alignment = 4;
+&cell.setCellStyle(&cellstyle_property_test4);
+
+&cell = &report.SetCellValueString(&sheet, 29, 0, "ALIGN_JUSTIFY");
+&cellstyle_property_test5 = &report.CreateCellStyle();
+&cellstyle_property_test5.Alignment = 5;
+&cell.setCellStyle(&cellstyle_property_test5);
+
+&cell = &report.SetCellValueString(&sheet, 30, 0, "ALIGN_CENTER_SELECTION");
+&cellstyle_property_test6 = &report.CreateCellStyle();
+&cellstyle_property_test6.Alignment = 6;
+&cell.setCellStyle(&cellstyle_property_test6);
+
+&cell = &report.SetCellValueString(&sheet, 32, 0, "VERTICAL_TOP");
+&cellstyle_property_test7 = &report.CreateCellStyle();
+&cellstyle_property_test7.VerticalAlignment = 0;
+&cell.setCellStyle(&cellstyle_property_test7);
+
+&cell = &report.SetCellValueString(&sheet, 32, 1, " VERTICAL_CENTER");
+&cellstyle_property_test8 = &report.CreateCellStyle();
+&cellstyle_property_test8.VerticalAlignment = 1;
+&cell.setCellStyle(&cellstyle_property_test8);
+
+&cell = &report.SetCellValueString(&sheet, 32, 2, " VERTICAL_BOTTOM");
+&cellstyle_property_test9 = &report.CreateCellStyle();
+&cellstyle_property_test9.VerticalAlignment = 2;
+&cell.setCellStyle(&cellstyle_property_test9);
+
+&cell = &report.SetCellValueString(&sheet, 32, 3, "VERTICAL_JUSTIFY");
+&cellstyle_property_test10 = &report.CreateCellStyle();
+&cellstyle_property_test10.VerticalAlignment = 3;
+&cell.setCellStyle(&cellstyle_property_test10);
+
+
+
+/* Column Widths */
+For &i = 0 To 3
+   &report.autoColumnWidth(&sheet, &i);
+End-For;
+
+If Not &report.outputFile() Then
+   MessageBox(0, "", 0, 0, "ERROR &report.outputFile()");
+Else
+   MessageBox(0, "", 0, 0, "&report.outputFile() Successful");
+End-If;
