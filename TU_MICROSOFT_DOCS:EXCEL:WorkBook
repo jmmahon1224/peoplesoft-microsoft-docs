@@ -1,0 +1,367 @@
+import TU_MICROSOFT_DOCS:EXCEL:*;
+
+class WorkBook
+   property JavaObject POIClassWrapper get;
+   property JavaObject POIDataFormatter get;
+   property JavaObject POIDateUtilClass get;
+   property JavaObject cellStyleBold get;
+   property JavaObject workbook get;
+   property JavaObject _workbook;
+   
+   property string filepath;
+   property string File get;
+   property string _File;
+   property boolean Fileset;
+   property string Extension get;
+   property boolean XSSF get set;
+   property boolean _XSSF;
+   property boolean XSSFset;
+   
+   method WorkBook();
+   method OpenFile() Returns JavaObject;
+   method CreateWorkBook();
+   method OpenWorkBook(&file As JavaObject);
+   method CreateSheet(&sheetName As string) Returns TU_MICROSOFT_DOCS:EXCEL:Sheet;
+   method GetSheetByIndex(&index As number) Returns TU_MICROSOFT_DOCS:EXCEL:Sheet;
+   method SetCellValueString(&sheet As TU_MICROSOFT_DOCS:EXCEL:Sheet, &row As number, &column As number, &string As string) Returns TU_MICROSOFT_DOCS:EXCEL:Cell;
+   method SetCellValueNumber(&sheet As TU_MICROSOFT_DOCS:EXCEL:Sheet, &row As number, &column As number, &number As float) Returns TU_MICROSOFT_DOCS:EXCEL:Cell;
+   method SetCellValueFormula(&sheet As TU_MICROSOFT_DOCS:EXCEL:Sheet, &row As number, &column As number, &formula As string) Returns TU_MICROSOFT_DOCS:EXCEL:Cell;
+   method GetBuiltInDataFormat(&index As integer) Returns TU_MICROSOFT_DOCS:EXCEL:DataFormat;
+   method CreateDataFormat(&format As string) Returns TU_MICROSOFT_DOCS:EXCEL:DataFormat;
+   method CreateCellStyle() Returns TU_MICROSOFT_DOCS:EXCEL:CellStyle;
+   method CreateFont() Returns TU_MICROSOFT_DOCS:EXCEL:Font;
+   method setColumnWidth(&sheet As TU_MICROSOFT_DOCS:EXCEL:Sheet, &index As number, &width As number);
+   method autoColumnWidth(&sheet As TU_MICROSOFT_DOCS:EXCEL:Sheet, &index As number);
+   method GetCellValue(&sheet As TU_MICROSOFT_DOCS:EXCEL:Sheet, &row As number, &column As number) Returns string;
+   
+   method GetCell(&row As JavaObject, &index As number) Returns JavaObject;
+   
+   
+   method outputFile() Returns boolean;
+   
+end-class;
+
+get POIClassWrapper
+   /+ Returns JavaObject +/
+   Return CreateJavaObject("excel.poi");
+end-get;
+
+get POIDataFormatter
+   /+ Returns JavaObject +/
+   Return CreateJavaObject("org.apache.poi.ss.usermodel.DataFormatter");
+end-get;
+
+get POIDateUtilClass
+   /+ Returns JavaObject +/
+   If %This.XSSF Then
+      Return CreateJavaObject("org.apache.poi.xssf.usermodel.XSSFDateUtil");
+   Else
+      Return CreateJavaObject("org.apache.poi.hssf.usermodel.HSSFDateUtil");
+   End-If;
+end-get;
+
+get cellStyleBold
+   /+ Returns JavaObject +/
+   Local JavaObject &OBJ_poi_class = %This.POIClassWrapper;
+   Local JavaObject &cellStyleBold = &OBJ_poi_class.getCellStyle(%This._workbook);
+   Return &cellStyleBold;
+end-get;
+
+get workbook
+   /+ Returns JavaObject +/
+   Return %This._workbook;
+end-get;
+
+get File
+   /+ Returns String +/
+   Local string &file;
+   Local array of string &test;
+   Local number &len;
+   
+   If %This.Fileset = False Then
+      %This.Fileset = True;
+      If Find("/", %This.filepath) <> 0 Then
+         &test = Split(%This.filepath, "/");
+      Else
+         &test = Split(%This.filepath, "\");
+      End-If;
+      &len = &test.Len;
+      &file = &test [&len];
+      %This._File = &file;
+   End-If;
+   Return %This._File;
+end-get;
+
+get Extension
+   /+ Returns String +/
+   Local string &extension;
+   &extension = Substring(%This.File, Find(".", %This.File) + 1, Len(%This.File) - Find(".", %This.File));
+   Return &extension;
+end-get;
+
+get XSSF
+   /+ Returns Boolean +/
+   If %This.XSSFset = False Then
+      %This.XSSFset = True;
+      If Upper(%This.Extension) = "XLS" Then
+         %This._XSSF = False;
+      Else
+         If Upper(%This.Extension) = "XLSX" Then
+            %This._XSSF = True;
+         Else
+            Error "Cannot determine filetype";
+         End-If;
+      End-If;
+   End-If;
+   Return %This._XSSF;
+end-get;
+
+set XSSF
+   /+ &NewValue as Boolean +/
+   %This._XSSF = &NewValue;
+   %This.XSSFset = True;
+end-set;
+
+method WorkBook
+   %This.XSSFset = False;
+   %This.Fileset = False;
+end-method;
+
+method OpenFile
+   /+ Returns JavaObject +/
+   Local JavaObject &OBJ_fileinputstream = CreateJavaObject("java.io.FileInputStream", %This.filepath);
+   Return &OBJ_fileinputstream;
+end-method;
+
+method CreateWorkBook
+   Local JavaObject &OBJ_excel_workbook;
+   If %This.XSSF Then
+      &OBJ_excel_workbook = CreateJavaObject("org.apache.poi.xssf.usermodel.XSSFWorkbook");
+   Else
+      &OBJ_excel_workbook = CreateJavaObject("org.apache.poi.hssf.usermodel.HSSFWorkbook");
+   End-If;
+   %This._workbook = &OBJ_excel_workbook;
+   rem Return &OBJ_excel_workbook;
+end-method;
+
+method OpenWorkBook
+   /+ &file as JavaObject +/
+   Local JavaObject &OBJ_excel_workbook;
+   If %This.XSSF Then
+      &OBJ_excel_workbook = CreateJavaObject("org.apache.poi.xssf.usermodel.XSSFWorkbook", &file);
+   Else
+      &OBJ_excel_workbook = CreateJavaObject("org.apache.poi.hssf.usermodel.HSSFWorkbook", &file);
+   End-If;
+   %This._workbook = &OBJ_excel_workbook;
+   rem Return &OBJ_excel_workbook;
+end-method;
+
+method CreateSheet
+   /+ &sheetName as String +/
+   /+ Returns TU_MICROSOFT_DOCS:EXCEL:Sheet +/
+   Local JavaObject &OBJ_excel_sheet;
+   Local JavaObject &OBJ_poi_class = %This.POIClassWrapper;
+   If %This.XSSF Then
+      &OBJ_excel_sheet = &OBJ_poi_class.createXSSFSheet(%This.workbook, CreateJavaObject("java.lang.String", &sheetName));
+   Else
+      &OBJ_excel_sheet = &OBJ_poi_class.createHSSFSheet(%This.workbook, CreateJavaObject("java.lang.String", &sheetName));
+   End-If;
+   
+   Local TU_MICROSOFT_DOCS:EXCEL:Sheet &sheet = create TU_MICROSOFT_DOCS:EXCEL:Sheet();
+   &sheet.SheetObject = &OBJ_excel_sheet;
+   &sheet.WorkBook = %This;
+   Return &sheet;
+end-method;
+
+method GetSheetByIndex
+   /+ &index as Number +/
+   /+ Returns TU_MICROSOFT_DOCS:EXCEL:Sheet +/
+   Local JavaObject &OBJ_excel_sheet;
+   Local JavaObject &OBJ_poi_class = %This.POIClassWrapper;
+   If %This.XSSF Then
+      &OBJ_excel_sheet = &OBJ_poi_class.intitiateXSSFSheet(%This.workbook, CreateJavaObject("java.lang.Integer", &index));
+   Else
+      &OBJ_excel_sheet = &OBJ_poi_class.intitiateHSSFSheet(%This.workbook, CreateJavaObject("java.lang.Integer", &index));
+   End-If;
+   
+   Local TU_MICROSOFT_DOCS:EXCEL:Sheet &sheet = create TU_MICROSOFT_DOCS:EXCEL:Sheet();
+   &sheet.SheetObject = &OBJ_excel_sheet;
+   &sheet.WorkBook = %This;
+   Return &sheet;
+end-method;
+
+method SetCellValueString
+   /+ &sheet as TU_MICROSOFT_DOCS:EXCEL:Sheet, +/
+   /+ &row as Number, +/
+   /+ &column as Number, +/
+   /+ &string as String +/
+   /+ Returns TU_MICROSOFT_DOCS:EXCEL:Cell +/
+   
+   Local JavaObject &OBJ_poi_class = %This.POIClassWrapper;
+   Local JavaObject &OBJ_excel_cell;
+   Local TU_MICROSOFT_DOCS:EXCEL:Cell &cell;
+   
+   &cell = &sheet.GetRowByIndex(&row).GetCellByIndex(&column);
+   &cell.SetCellValueString(&string);
+   &OBJ_excel_cell = &cell.CellObject;
+   
+   Return &cell;
+end-method;
+
+method SetCellValueNumber
+   /+ &sheet as TU_MICROSOFT_DOCS:EXCEL:Sheet, +/
+   /+ &row as Number, +/
+   /+ &column as Number, +/
+   /+ &number as Float +/
+   /+ Returns TU_MICROSOFT_DOCS:EXCEL:Cell +/
+   Local JavaObject &OBJ_poi_class = %This.POIClassWrapper;
+   Local JavaObject &OBJ_excel_cell;
+   Local TU_MICROSOFT_DOCS:EXCEL:Cell &cell;
+   
+   &cell = &sheet.GetRowByIndex(&row).GetCellByIndex(&column);
+   &OBJ_poi_class.setCellValueNumeric(&cell.CellObject, &number);
+   Return &cell;
+end-method;
+
+method SetCellValueFormula
+   /+ &sheet as TU_MICROSOFT_DOCS:EXCEL:Sheet, +/
+   /+ &row as Number, +/
+   /+ &column as Number, +/
+   /+ &formula as String +/
+   /+ Returns TU_MICROSOFT_DOCS:EXCEL:Cell +/
+   Local JavaObject &OBJ_poi_class = %This.POIClassWrapper;
+   Local JavaObject &OBJ_excel_cell;
+   Local TU_MICROSOFT_DOCS:EXCEL:Cell &cell;
+   
+   &cell = &sheet.GetRowByIndex(&row).GetCellByIndex(&column);
+   &OBJ_poi_class.setCellValueFormula(&cell.CellObject, CreateJavaObject("java.lang.String", &formula));
+   Return &cell;
+end-method;
+
+method GetBuiltInDataFormat
+   /+ &index as Integer +/
+   /+ Returns TU_MICROSOFT_DOCS:EXCEL:DataFormat +/
+   Local TU_MICROSOFT_DOCS:EXCEL:DataFormat &dataFormat = create TU_MICROSOFT_DOCS:EXCEL:DataFormat(%This);
+   &dataFormat.GetBuiltInFormat(&index);
+   Return &dataFormat;
+end-method;
+
+method CreateDataFormat
+   /+ &format as String +/
+   /+ Returns TU_MICROSOFT_DOCS:EXCEL:DataFormat +/
+   Local TU_MICROSOFT_DOCS:EXCEL:DataFormat &dataFormat = create TU_MICROSOFT_DOCS:EXCEL:DataFormat(%This);
+   &dataFormat.CreateDataFormat(&format);
+   Return &dataFormat;
+end-method;
+
+method CreateCellStyle
+   /+ Returns TU_MICROSOFT_DOCS:EXCEL:CellStyle +/
+   rem Local JavaObject &OBJ_cell_style;
+   rem Return &OBJ_cell_style;
+   Local TU_MICROSOFT_DOCS:EXCEL:CellStyle &cellStyle = create TU_MICROSOFT_DOCS:EXCEL:CellStyle(%This);
+   Return &cellStyle;
+end-method;
+
+method CreateFont
+   /+ Returns TU_MICROSOFT_DOCS:EXCEL:Font +/
+   Local TU_MICROSOFT_DOCS:EXCEL:Font &font = create TU_MICROSOFT_DOCS:EXCEL:Font(%This);
+   Return &font;
+end-method;
+
+method GetCell
+   /+ &row as JavaObject, +/
+   /+ &index as Number +/
+   /+ Returns JavaObject +/
+   Local JavaObject &OBJ_excel_cell;
+   Local JavaObject &OBJ_poi_class = %This.POIClassWrapper;
+   
+   try
+      If %This.XSSF Then
+         &OBJ_excel_cell = &OBJ_poi_class.intitiateXSSFCell(&row, CreateJavaObject("java.lang.Integer", &index));
+      Else
+         &OBJ_excel_cell = &OBJ_poi_class.intitiateHSSFCell(&row, CreateJavaObject("java.lang.Integer", &index));
+      End-If;
+      
+   catch Exception &exGetCell
+      rem MessageBox(0, "", 0, 0, "Exception &exGetCell: " | &exGetCell.ToString());
+   end-try;
+   
+   Return &OBJ_excel_cell;
+end-method;
+
+method GetCellValue
+   /+ &sheet as TU_MICROSOFT_DOCS:EXCEL:Sheet, +/
+   /+ &row as Number, +/
+   /+ &column as Number +/
+   /+ Returns String +/
+   Local JavaObject &OBJ_data_formatter = %This.POIDataFormatter;
+   Local string &cellvalue;
+   
+   Local TU_MICROSOFT_DOCS:EXCEL:Cell &cell;
+   &cell = &sheet.GetRowByIndex(&row).GetCellByIndex(&column);
+   
+   try
+      Evaluate &cell.CellObject.getCellType()
+         /* 0 CELL_TYPE_NUMERIC */
+      When = 0
+         If %This.POIDateUtilClass.isCellDateFormatted(&cell.CellObject) Then
+            &cellvalue = DateTimeToLocalizedString(&cell.CellObject.getDateCellValue(), "yyyy-MM-dd");
+            rem &cellvalue = &OBJ_data_formatter.formatCellValue(&cell);
+         Else
+            rem &cellvalue = &cell.getNumericCellValue();
+            &cellvalue = &OBJ_data_formatter.formatCellValue(&cell.CellObject);
+         End-If;
+         Break;
+         /* 1 CELL_TYPE_STRING */
+      When = 1
+         &cellvalue = &cell.CellObject.getStringCellValue();
+         Break;
+         /* 2 CELL_TYPE_FORMULA */
+      When = 2
+         &cellvalue = &cell.CellObject.getCellFormula();
+         Break;
+         /* 3 CELL_TYPE_BLANK */
+      When = 3
+         &cellvalue = &cell.CellObject.getStringCellValue();
+         Break;
+         /* 4 CELL_TYPE_BOOLEAN */
+      When = 4
+         &cellvalue = &cell.CellObject.getBooleanCellValue();
+         Break;
+         /* 5 CELL_TYPE_ERROR */
+      When = 5
+         &cellvalue = &cell.CellObject.getErrorCellValue();
+         Break;
+      End-Evaluate;
+      
+   catch Exception &exGetCellValue
+      rem MessageBox(0, "", 0, 0, "Exception &exGetCellValue: " | &exGetCellValue.ToString());
+   end-try;
+   
+   Return &cellvalue;
+end-method;
+
+/* Width is screwed up, width you want in pixels(not points)/2 * 50 */
+method setColumnWidth
+   /+ &sheet as TU_MICROSOFT_DOCS:EXCEL:Sheet, +/
+   /+ &index as Number, +/
+   /+ &width as Number +/
+   Local JavaObject &OBJ_poi_class = %This.POIClassWrapper;
+   &OBJ_poi_class.setColumnWidth(&sheet.SheetObject, &index, &width);
+end-method;
+
+method autoColumnWidth
+   /+ &sheet as TU_MICROSOFT_DOCS:EXCEL:Sheet, +/
+   /+ &index as Number +/
+   Local JavaObject &OBJ_poi_class = %This.POIClassWrapper;
+   &OBJ_poi_class.autoColumnWidth(&sheet.SheetObject, &index);
+end-method;
+
+method outputFile
+   /+ Returns Boolean +/
+   Local JavaObject &OBJ_fileouputstream = CreateJavaObject("java.io.FileOutputStream", CreateJavaObject("java.io.File", %This.filepath));
+   %This.workbook.write(&OBJ_fileouputstream);
+   &OBJ_fileouputstream.close();
+   Return True;
+end-method;
+
