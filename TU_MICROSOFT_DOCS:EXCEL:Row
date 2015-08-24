@@ -1,0 +1,38 @@
+import TU_MICROSOFT_DOCS:EXCEL:*;
+
+class Row
+   property JavaObject POIClassWrapper get;
+   property JavaObject RowObject;
+   property TU_MICROSOFT_DOCS:EXCEL:Sheet Sheet;
+   property TU_MICROSOFT_DOCS:EXCEL:WorkBook WorkBook;
+   
+   method GetCellByIndex(&index As number) Returns TU_MICROSOFT_DOCS:EXCEL:Cell;
+end-class;
+
+get POIClassWrapper
+   /+ Returns JavaObject +/
+   Return CreateJavaObject("excel.poi");
+end-get;
+
+method GetCellByIndex
+   /+ &index as Number +/
+   /+ Returns TU_MICROSOFT_DOCS:EXCEL:Cell +/
+   Local JavaObject &OBJ_excel_cell;
+   Local JavaObject &OBJ_poi_class = %This.POIClassWrapper;
+   
+   Local TU_MICROSOFT_DOCS:EXCEL:Cell &cell = create TU_MICROSOFT_DOCS:EXCEL:Cell();
+   
+   If %This.WorkBook.XSSF Then
+      &OBJ_excel_cell = &OBJ_poi_class.intitiateXSSFCell(%This.RowObject, CreateJavaObject("java.lang.Integer", &index));
+   Else
+      &OBJ_excel_cell = &OBJ_poi_class.intitiateHSSFCell(%This.RowObject, CreateJavaObject("java.lang.Integer", &index));
+   End-If;
+   
+   &cell.CellObject = &OBJ_excel_cell;
+   &cell.Row = %This;
+   &cell.Sheet = %This.Sheet;
+   &cell.WorkBook = %This.WorkBook;
+   Return &cell;
+   
+end-method;
+
