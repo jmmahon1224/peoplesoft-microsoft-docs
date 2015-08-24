@@ -1,0 +1,100 @@
+import TU_MICROSOFT_DOCS:EXCEL:*;
+
+class CellStyle
+   property JavaObject POIClassWrapper get;
+   property JavaObject CellStyleObject;
+   property TU_MICROSOFT_DOCS:EXCEL:Font Font;
+   property TU_MICROSOFT_DOCS:EXCEL:DataFormat DataFormat;
+   property TU_MICROSOFT_DOCS:EXCEL:WorkBook WorkBook;
+   
+   property boolean Locked;
+   property number Alignment get set;
+   property number Alignment_;
+   property number VerticalAlignment get set;
+   property number VerticalAlignment_;
+   property string Format;
+   
+   method CellStyle(&workbook_ As TU_MICROSOFT_DOCS:EXCEL:WorkBook);
+   method SetFont(&_font As TU_MICROSOFT_DOCS:EXCEL:Font);
+   method SetDataFormat(&_dataformat As TU_MICROSOFT_DOCS:EXCEL:DataFormat);
+   rem method SetDataFormat(&_format As number);
+   
+   method GetBuiltInDataFormat(&index As integer);
+   method CreateDataFormat(&_format As string);
+end-class;
+
+get POIClassWrapper
+   /+ Returns JavaObject +/
+   Return CreateJavaObject("excel.poi");
+end-get;
+
+/******************************/
+/* ALIGN_GENERAL 			0 */
+/* ALIGN_LEFT 				1 */
+/* ALIGN_CENTER 			2 */
+/* ALIGN_RIGHT 				3 */
+/* ALIGN_FILL				4 */
+/* ALIGN_JUSTIFY			5 */
+/* ALIGN_CENTER_SELECTION 	6 */
+/******************************/
+get Alignment
+   /+ Returns Number +/
+   Return %This.Alignment_;
+end-get;
+
+set Alignment
+   /+ &NewValue as Number +/
+   %This.Alignment_ = &NewValue;
+   %This.CellStyleObject.setAlignment(&NewValue)
+end-set;
+
+/******************************/
+/* VERTICAL_TOP 			0 */
+/* VERTICAL_CENTER 			1 */
+/* VERTICAL_BOTTOM 			2 */
+/* VERTICAL_JUSTIFY			3 */
+/******************************/
+get VerticalAlignment
+   /+ Returns Number +/
+   Return %This.VerticalAlignment_;
+end-get;
+
+set VerticalAlignment
+   /+ &NewValue as Number +/
+   %This.VerticalAlignment_ = &NewValue;
+   %This.CellStyleObject.setVerticalAlignment(&NewValue)
+end-set;
+
+
+method CellStyle
+   /+ &workbook_ as TU_MICROSOFT_DOCS:EXCEL:WorkBook +/
+   Local JavaObject &OBJ_excel_cellstyle;
+   %This.WorkBook = &workbook_;
+   &OBJ_excel_cellstyle = %This.POIClassWrapper.createCellStyle(%This.WorkBook.workbook);
+   %This.CellStyleObject = &OBJ_excel_cellstyle;
+end-method;
+
+method SetFont
+   /+ &_font as TU_MICROSOFT_DOCS:EXCEL:Font +/
+   %This.POIClassWrapper.setFont(%This.CellStyleObject, &_font.FontObject);
+end-method;
+
+method SetDataFormat
+   /+ &_dataformat as TU_MICROSOFT_DOCS:EXCEL:DataFormat +/
+   If &_dataformat.FormatString <> "" Then
+      %This.POIClassWrapper.setDataFormat(%This.CellStyleObject, &_dataformat.DataFormatObject, CreateJavaObject("java.lang.String", &_dataformat.FormatString));
+   Else
+      %This.CellStyleObject.setDataFormat(&_dataformat.BuiltInFormat);
+   End-If;
+end-method;
+
+method GetBuiltInDataFormat
+   /+ &index as Integer +/
+   %This.CellStyleObject.getFormat(&index);
+end-method;
+
+method CreateDataFormat
+   /+ &_format as String +/
+   %This.CellStyleObject.getFormat(CreateJavaObject("java.lang.String", &Format));
+end-method;
+
