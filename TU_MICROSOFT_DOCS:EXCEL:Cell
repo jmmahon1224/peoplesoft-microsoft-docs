@@ -1,0 +1,119 @@
+import TU_MICROSOFT_DOCS:EXCEL:*;
+
+class Cell
+   property JavaObject POIClassWrapper get;
+   property JavaObject POIDataFormatter get;
+   property JavaObject POIDateUtilClass get;
+   property JavaObject CellObject;
+   property number ColumnIndex get;
+   property number RowIndex get;
+   property TU_MICROSOFT_DOCS:EXCEL:Sheet Sheet;
+   property TU_MICROSOFT_DOCS:EXCEL:WorkBook WorkBook;
+   property TU_MICROSOFT_DOCS:EXCEL:Row Row;
+   
+   method SetCellValueString(&string As string);
+   method SetCellValueNumber(&number As float);
+   method SetCellValueFormula(&formula As string);
+   method SetCellStyle(&cellStyle As TU_MICROSOFT_DOCS:EXCEL:CellStyle);
+   method GetCellValue() Returns string;
+   
+end-class;
+
+get POIClassWrapper
+   /+ Returns JavaObject +/
+   Return CreateJavaObject("excel.poi");
+end-get;
+
+get POIDataFormatter
+   /+ Returns JavaObject +/
+   Return CreateJavaObject("org.apache.poi.ss.usermodel.DataFormatter");
+end-get;
+
+get POIDateUtilClass
+   /+ Returns JavaObject +/
+   Return CreateJavaObject("org.apache.poi.hssf.usermodel.HSSFDateUtil");
+end-get;
+
+get ColumnIndex
+   /+ Returns Number +/
+   Local number &columnIndex = %This.CellObject.getColumnIndex();
+   Return &columnIndex;
+end-get;
+
+get RowIndex
+   /+ Returns Number +/
+   Local number &rowIndex = %This.CellObject.getRowIndex();
+   Return &rowIndex + 1;
+end-get;
+
+method SetCellValueString
+   /+ &string as String +/
+   %This.CellObject.setCellValue(CreateJavaObject("java.lang.String", &string));
+end-method;
+
+method SetCellValueNumber
+   /+ &number as Float +/
+   Local JavaObject &OBJ_poi_class = %This.POIClassWrapper;
+   &OBJ_poi_class.setCellValueNumeric(%This.CellObject, &number);
+end-method;
+
+method SetCellValueFormula
+   /+ &formula as String +/
+   Local JavaObject &OBJ_poi_class = %This.POIClassWrapper;
+   &OBJ_poi_class.setCellValueFormula(%This.CellObject, CreateJavaObject("java.lang.String", &formula));
+end-method;
+
+method SetCellStyle
+   /+ &cellStyle as TU_MICROSOFT_DOCS:EXCEL:CellStyle +/
+   /* &OBJ_data_format.getBuiltinFormat(CreateJavaObject("java.lang.String", "0.00"));
+   &OBJ_excel_cellStyle.setDataFormat(2); */
+   
+   %This.POIClassWrapper.setCellStyle(%This.CellObject, &cellStyle.CellStyleObject);
+end-method;
+
+method GetCellValue
+   /+ Returns String +/
+   Local JavaObject &OBJ_data_formatter = %This.POIDataFormatter;
+   Local string &cellvalue;
+   
+   try
+      Evaluate %This.CellObject.getCellType()
+         /* 0 CELL_TYPE_NUMERIC */
+      When = 0
+         If %This.POIDateUtilClass.isCellDateFormatted(%This.CellObject) Then
+            &cellvalue = DateTimeToLocalizedString(%This.CellObject.getDateCellValue(), "yyyy-MM-dd");
+            rem &cellvalue = &OBJ_data_formatter.formatCellValue(&cell);
+         Else
+            rem &cellvalue = &cell.getNumericCellValue();
+            &cellvalue = &OBJ_data_formatter.formatCellValue(%This.CellObject);
+         End-If;
+         Break;
+         /* 1 CELL_TYPE_STRING */
+      When = 1
+         &cellvalue = %This.CellObject.getStringCellValue();
+         Break;
+         /* 2 CELL_TYPE_FORMULA */
+      When = 2
+         &cellvalue = %This.CellObject.getCellFormula();
+         Break;
+         /* 3 CELL_TYPE_BLANK */
+      When = 3
+         &cellvalue = %This.CellObject.getStringCellValue();
+         Break;
+         /* 4 CELL_TYPE_BOOLEAN */
+      When = 4
+         &cellvalue = %This.CellObject.getBooleanCellValue();
+         Break;
+         /* 5 CELL_TYPE_ERROR */
+      When = 5
+         &cellvalue = %This.CellObject.getErrorCellValue();
+         Break;
+      End-Evaluate;
+      
+   catch Exception &exGetCellValue
+      rem MessageBox(0, "", 0, 0, "Exception &exGetCellValue: " | &exGetCellValue.ToString());
+   end-try;
+   
+   Return &cellvalue;
+end-method;
+
